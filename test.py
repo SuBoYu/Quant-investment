@@ -147,6 +147,7 @@ priceclose = [4739,5551,4452,5890,6139,6548,7823,8506,4591,8188,8972,7072,
 rorTaiex = (priceopen[y2-2000]/priceopen[y1-2000]-1)*100
 
 count = len(rorlist)
+meanror = sum(rorlist)/len(rorlist)
 
 if mode == "all":
     rorlist.sort()
@@ -155,8 +156,7 @@ if mode == "all":
 
     countp = len(rorplist)
     countn = len(rornlist)
-
-    meanror = sum(rorlist)/len(rorlist)
+    
     meanrorp = sum(rorplist)/len(rorplist)
     meanrorn = sum(rornlist)/len(rornlist)
 
