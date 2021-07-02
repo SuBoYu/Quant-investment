@@ -1,5 +1,14 @@
-import pandas as pd
+import time
+import random
 import requests
+import pandas as pd
+import datetime as dt
+from io import StringIO
+import backtrader as bt
+import backtrader.feeds as btfeeds
+import pandas_datareader.data as pdr
+
+starttime = dt.datetime.now()
 
 #營收成長性
 url = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_103_2_0.html"
@@ -9,12 +18,62 @@ url = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_103_2_0.html"
 #累計營收年增率>0(10)
 
 #獲利成長性
-url = "https://mops.twse.com.tw/mops/web/t163sb06"
+for year in range(102, 110):
+    for season in range(1, 5):
+        if year >= 1000:
+            year -= 1911
+        time.sleep(random.uniform(1, 5))
+
+        he = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36"}
+
+        print("============This is ", year, "_", season, "============")
+
+        print("=================營益分析表=================")
+
+        # 營益分析表
+        url = "https://mops.twse.com.tw/mops/web/t163sb06"
+
+        print("Begin requesting...")
+
+        session = requests.session()
+
+        r = session.post(url,
+                         {'encodeURIComponent': 1, 'step': 1, 'firstin': 1, 'off': 1, 'TYPEK': 'sii', 'year': str(year),
+                          'season': str(season)}, headers=he)
+
+        r.encoding = r.apparent_encoding
+
+        re = pd.read_html(r.text, header=None)
+
+        print("End requesting.")
+
+        print("Begin selecting...")
+
+        all = re[9]
+
+        gm = all[["毛利率(%)(營業毛利)/(營業收入)"]]
+
+        gm.columns = ["毛利率"]
+
+        opm = all[["營業利益率(%)(營業利益)/(營業收入)"]]
+
+        oi = all[["營業收入(百萬元)"]]
+
+        op = opm * oi
+
+        op.columns = ["營業利益"]
+
+        print(op)
+
+endtime = dt.datetime.now()
+
+print("Process time:", endtime - starttime)
 #營益分析表https://ithelp.ithome.com.tw/articles/10204773
-#毛利率季增率>0(5)
-#毛利率年增率>0(5)
-#營業收益季增率>0(5)
-#營業收益年增率>0(5)
+#毛利率季增率>0(5)       season2/season1   -1
+#毛利率年增率>0(5)       year2/year1            -1
+#營業收益季增率>0(5)   營業收益率*營業收入(season2/season1) -1
+#營業收益年增率>0(5)   營業收益率*營業收入(year2/year1) -1
 
 #穩定性
 #營業活動現金流量>0(5)
