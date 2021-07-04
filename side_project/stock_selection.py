@@ -18,18 +18,25 @@ url = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_103_2_0.html"
 #累計營收年增率>0(10)
 
 #獲利成長性
+import time
+import random
+import sqlite3
+import requests
+import pandas as pd
+import datetime as dt
+
+starttime = dt.datetime.now()
+
 for year in range(102, 110):
     for season in range(1, 5):
-        if year >= 1000:
-            year -= 1911
         time.sleep(random.uniform(1, 5))
 
         he = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36"}
 
-        print("============This is ", year, "_", season, "============")
+        print("================This is ", year, "_", season, "================")
 
-        print("=================營益分析表=================")
+        print("====================營益分析表====================")
 
         # 營益分析表
         url = "https://mops.twse.com.tw/mops/web/t163sb06"
@@ -52,19 +59,45 @@ for year in range(102, 110):
 
         all = re[9]
 
-        gm = all[["毛利率(%)(營業毛利)/(營業收入)"]]
+        # 公司代號
+        stock = all.loc[:, 0]
+        stock = stock.drop([0])
 
-        gm.columns = ["毛利率"]
+        # 毛利率
+        gm = all.loc[:, 3]
+        gm = gm.drop([0])
 
-        opm = all[["營業利益率(%)(營業利益)/(營業收入)"]]
+        # 營業收益率
+        opm = all.loc[:, 4]
+        opm = opm.drop([0])
 
-        oi = all[["營業收入(百萬元)"]]
+        # 營業收入
+        oi = all.loc[:, 2]
+        oi = oi.drop([0])
 
-        op = opm * oi
+        '''
+        #營業收益
+        op = opm * oi 
 
-        op.columns = ["營業利益"]
+        op.columns = ["營業收益"]
+        '''
+        results = pd.concat([stock, gm, opm, oi], axis=1)
+        results.columns = ["公司代號", "毛利率", "營業收益率", "營業收入"]
 
-        print(op)
+        results.drop(results.loc[results['公司代號'] == '公司代號'].index, inplace=True)
+
+        # ----------------------Sqlite----------------------
+        print("================Begin to write table================")
+        conn = sqlite3.connect('db1.db')
+        cursor = conn.cursor()
+        tbname = "tb_" + str(year) + "_" + str(season)
+        cursor.execute('CREATE TABLE ' + tbname + "(公司代號, 毛利率, 營業收益率, 營業收入)")
+
+        results.to_sql(tbname, conn, if_exists='append', index=False)
+        conn.commit()
+        print("================End of writing table================")
+
+print("Done")
 
 endtime = dt.datetime.now()
 
